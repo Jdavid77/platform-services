@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../base/istio/istio.yaml
+  - ../base/metallb/metallb.yaml
+  - istio.yaml
+  - metallb.yaml
+
+labels:
+  - pairs:
+      env: platform-sandbox
+    includeSelectors: true
+    includeTemplates: true
