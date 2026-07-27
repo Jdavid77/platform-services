@@ -133,6 +133,12 @@ spec:
               - port: 443
                 targetPort: 8443
                 name: https
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: ""
           resources:
             requests:
               cpu: 100m
@@ -140,3 +146,17 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+        postRenderers:
+          - kustomize:
+              patches:
+                - patch: |
+                    apiVersion: apps/v1
+                    kind: Deployment
+                    metadata:
+                      name: istio-ingressgateway
+                      namespace: istio-system
+                    spec:
+                      template:
+                        spec:
+                          hostNetwork: true
+                          dnsPolicy: ClusterFirstWithHostNet
