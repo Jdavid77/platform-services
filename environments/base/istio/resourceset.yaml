@@ -124,16 +124,27 @@ spec:
         values:
           name: istio-ingressgateway
           replicaCount: 1
+          securityContext:
+            runAsNonRoot: false
+          containerSecurityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          dnsPolicy: ClusterFirstWithHostNet
           service:
             type: LoadBalancer
             ports:
               - port: 80
-                targetPort: 8080
+                targetPort: 80
                 name: http2
               - port: 443
-                targetPort: 8443
+                targetPort: 443
                 name: https
-          runAsRoot: true
           tolerations:
             - key: node-role.kubernetes.io/control-plane
               operator: Exists
@@ -160,4 +171,3 @@ spec:
                       template:
                         spec:
                           hostNetwork: true
-                          dnsPolicy: ClusterFirstWithHostNet
