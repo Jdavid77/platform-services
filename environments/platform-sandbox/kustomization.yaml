@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
   - ../base/istio
-  - ../base/metallb
   - ../base/cert-manager
   - istio.yaml
   - metallb.yaml
