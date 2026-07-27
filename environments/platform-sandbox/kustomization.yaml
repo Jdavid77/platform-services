@@ -5,7 +5,6 @@ resources:
   - ../base/istio
   - ../base/cert-manager
   - istio.yaml
-  - metallb.yaml
 
 labels:
   - pairs:
