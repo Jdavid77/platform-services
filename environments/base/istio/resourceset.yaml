@@ -135,7 +135,6 @@ spec:
             capabilities:
               drop:
                 - ALL
-          dnsPolicy: ClusterFirstWithHostNet
           service:
             type: LoadBalancer
             ports:
@@ -171,3 +170,4 @@ spec:
                       template:
                         spec:
                           hostNetwork: true
+                          dnsPolicy: ClusterFirstWithHostNet
