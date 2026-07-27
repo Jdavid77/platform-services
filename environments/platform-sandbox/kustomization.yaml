@@ -4,7 +4,10 @@ kind: Kustomization
 resources:
   - ../base/istio
   - ../base/cert-manager
+  - ../base/opa
   - istio.yaml
+  - cert-manager.yaml
+  - opa.yaml
 
 labels:
   - pairs:

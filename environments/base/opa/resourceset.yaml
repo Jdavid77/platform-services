@@ -1,7 +1,7 @@
 apiVersion: fluxcd.controlplane.io/v1
 kind: ResourceSet
 metadata:
-  name: cert-manager
+  name: opa
   namespace: flux-system
   annotations:
     fluxcd.controlplane.io/reconcile: "enabled"
@@ -14,35 +14,34 @@ spec:
     - kind: ResourceSetInputProvider
       selector:
         matchLabels:
-          app: cert-manager
+          app: opa
   resources:
     - apiVersion: source.toolkit.fluxcd.io/v1
-      kind: OCIRepository
+      kind: HelmRepository
       metadata:
-        name: cert-manager
+        name: gatekeeper
         namespace: flux-system
       spec:
-        interval: 5m
-        layerSelector:
-          mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
-          operation: copy
-        ref:
-          tag: << inputs.version >>
-        url: oci://quay.io/jetstack/charts/cert-manager
+        interval: 30m
+        url: https://open-policy-agent.github.io/gatekeeper/charts
+        timeout: 1m
     - apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
       metadata:
-        name: cert-manager
+        name: gatekeeper
         namespace: flux-system
       spec:
-        interval: 15m
-        timeout: 5m
-        maxHistory: 2
-        chartRef:
-          kind: OCIRepository
-          name: cert-manager
-          namespace: flux-system
-        targetNamespace: cert-manager
+        interval: 5m
+        chart:
+          spec:
+            chart: gatekeeper
+            version: << inputs.version >>
+            sourceRef:
+              kind: HelmRepository
+              name: gatekeeper
+              namespace: flux-system
+            interval: 10m
+        targetNamespace: opa-gatekeeper
         install:
           createNamespace: true
           timeout: 10m0s
@@ -54,4 +53,5 @@ spec:
             retries: 3
             remediateLastFailure: true
         values:
-          installCRDs: true
+          psp:
+            enabled: false
