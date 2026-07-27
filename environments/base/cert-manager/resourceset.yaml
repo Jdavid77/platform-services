@@ -33,7 +33,7 @@ spec:
       kind: HelmRelease
       metadata:
         name: cert-manager
-        namespace: cert-manager
+        namespace: flux-system
       spec:
         interval: 15m
         timeout: 5m
