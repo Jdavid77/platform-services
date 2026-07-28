@@ -2,6 +2,8 @@ name: Conftest Policy Checks
 
 on:
   pull_request:
+    branches:
+      - main
     paths:
       - "environments/**"
       - "policy/**"
@@ -11,7 +13,7 @@ jobs:
     name: Validate manifests against OPA policies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install conftest
         run: |
