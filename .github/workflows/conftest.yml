@@ -21,4 +21,4 @@ jobs:
           sudo mv conftest /usr/local/bin/
 
       - name: Run conftest
-        run: conftest test environments/ -p policy/ --recursive
+        run: conftest test environments/ -p policy/
