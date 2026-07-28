@@ -34,6 +34,7 @@ deny contains msg if {
   input.kind == "ResourceSet"
   some resource in input.spec.resources
   resource.kind == "HelmRelease"
+  not resource.spec.chartRef
   not resource.spec.chart.spec.version
   msg := sprintf(
     "ResourceSet %s: HelmRelease %s is missing spec.chart.spec.version",
@@ -45,6 +46,7 @@ deny contains msg if {
   input.kind == "ResourceSet"
   some resource in input.spec.resources
   resource.kind == "HelmRelease"
+  not resource.spec.chartRef
   version := resource.spec.chart.spec.version
   not contains(version, "<< inputs.version >>")
   msg := sprintf(
