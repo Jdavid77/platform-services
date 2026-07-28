@@ -8,4 +8,4 @@ metadata:
 spec:
   type: Static
   defaultValues:
-    version: "v1.21.0"
+    version: "1.21.0"
