@@ -1,0 +1,81 @@
+apiVersion: fluxcd.controlplane.io/v1
+kind: ResourceSet
+metadata:
+  name: opa-constraints
+  namespace: flux-system
+  annotations:
+    fluxcd.controlplane.io/reconcile: "enabled"
+    fluxcd.controlplane.io/reconcileEvery: "30m"
+    fluxcd.controlplane.io/reconcileTimeout: "5m"
+    fluxcd.controlplane.io/force: "true"
+spec:
+  wait: true
+  dependsOn:
+    - apiVersion: fluxcd.controlplane.io/v1
+      kind: ResourceSet
+      name: opa-templates
+      namespace: flux-system
+      ready: true
+  inputsFrom:
+    - kind: ResourceSetInputProvider
+      selector:
+        matchLabels:
+          app: opa
+  resources:
+    - apiVersion: constraints.gatekeeper.sh/v1beta1
+      kind: K8sRequiredLabels
+      metadata:
+        name: namespace-must-have-team
+        annotations:
+          description: "All team-owned namespaces must declare team, environment, and cost-center labels"
+      spec:
+        enforcementAction: deny
+        match:
+          kinds:
+            - apiGroups: [""]
+              kinds: ["Namespace"]
+          excludedNamespaces:
+            - cert-manager
+            - default
+            - flux-system
+            - istio-system
+            - kube-node-lease
+            - kube-public
+            - kube-system
+            - local-path-storage
+            - metallb-system
+            - opa-gatekeeper
+        parameters:
+          labels:
+            - key: "team"
+              allowedRegex: "^[a-z]{2,20}$"
+            - key: "environment"
+              allowedRegex: "^(dev|staging|prod)$"
+            - key: "cost-center"
+              allowedRegex: "^[0-9]{4,6}$"
+    - apiVersion: constraints.gatekeeper.sh/v1beta1
+      kind: ResourceLimits
+      metadata:
+        name: require-resource-limits
+        annotations:
+          description: "All containers must specify CPU and memory limits within allowed maxima"
+      spec:
+        enforcementAction: deny
+        match:
+          kinds:
+            - apiGroups: ["apps"]
+              kinds: ["Deployment"]
+          excludedNamespaces:
+            - cert-manager
+            - default
+            - flux-system
+            - istio-system
+            - kube-node-lease
+            - kube-public
+            - kube-system
+            - local-path-storage
+            - metallb-system
+            - opa-gatekeeper
+        parameters:
+          cpu: "2"
+          memory: "4Gi"

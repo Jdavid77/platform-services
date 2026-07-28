@@ -1,0 +1,119 @@
+apiVersion: fluxcd.controlplane.io/v1
+kind: ResourceSet
+metadata:
+  name: opa-templates
+  namespace: flux-system
+  annotations:
+    fluxcd.controlplane.io/reconcile: "enabled"
+    fluxcd.controlplane.io/reconcileEvery: "30m"
+    fluxcd.controlplane.io/reconcileTimeout: "5m"
+    fluxcd.controlplane.io/force: "true"
+spec:
+  wait: true
+  dependsOn:
+    - apiVersion: fluxcd.controlplane.io/v1
+      kind: ResourceSet
+      name: opa
+      namespace: flux-system
+      ready: true
+  inputsFrom:
+    - kind: ResourceSetInputProvider
+      selector:
+        matchLabels:
+          app: opa
+  resources:
+    - apiVersion: templates.gatekeeper.sh/v1
+      kind: ConstraintTemplate
+      metadata:
+        name: resourcelimits
+        annotations:
+          description: "Requires all containers to have CPU and memory limits; optionally enforces a memory ceiling"
+      spec:
+        crd:
+          spec:
+            names:
+              kind: ResourceLimits
+            validation:
+              openAPIV3Schema:
+                type: object
+                properties:
+                  cpu:
+                    type: string
+                    description: "Maximum CPU limit allowed (e.g. '2'). Optional."
+                  memory:
+                    type: string
+                    description: "Maximum memory limit allowed (e.g. '4Gi'). Optional."
+        targets:
+          - target: admission.k8s.gatekeeper.sh
+            rego: |
+              package resourcelimits
+
+              violation[{"msg": msg}] {
+                container := input.review.object.spec.containers[_]
+                not container.resources.limits.memory
+                msg := sprintf("Container '%v' missing memory limits", [container.name])
+              }
+
+              violation[{"msg": msg}] {
+                container := input.review.object.spec.containers[_]
+                not container.resources.limits.cpu
+                msg := sprintf("Container '%v' missing CPU limits", [container.name])
+              }
+
+              # Reject if memory limit exceeds the per-environment maximum
+              violation[{"msg": msg}] {
+                container := input.review.object.spec.containers[_]
+                mem_limit := container.resources.limits.memory
+                exceeds_max_memory(mem_limit)
+                msg := sprintf("Container '%v' memory limit %v exceeds maximum", [container.name, mem_limit])
+              }
+
+              exceeds_max_memory(mem) {
+                mem_value := units.parse_bytes(mem)
+                max_value := units.parse_bytes(input.parameters.memory)
+                mem_value > max_value
+              }
+    - apiVersion: templates.gatekeeper.sh/v1
+      kind: ConstraintTemplate
+      metadata:
+        name: k8srequiredlabels
+        annotations:
+          description: "Requires specified labels on resources"
+      spec:
+        crd:
+          spec:
+            names:
+              kind: K8sRequiredLabels
+            validation:
+              openAPIV3Schema:
+                type: object
+                properties:
+                  labels:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                        allowedRegex:
+                          type: string
+        targets:
+          - target: admission.k8s.gatekeeper.sh
+            rego: |
+              package k8srequiredlabels
+
+              violation[{"msg": msg}] {
+                provided := {label | input.review.object.metadata.labels[label]}
+                required := {label | label := input.parameters.labels[_].key}
+                missing := required - provided
+                count(missing) > 0
+                msg := sprintf("Missing required label(s): %v", [missing])
+              }
+
+              violation[{"msg": msg}] {
+                label := input.parameters.labels[_]
+                label.allowedRegex != ""
+                value := input.review.object.metadata.labels[label.key]
+                not re_match(label.allowedRegex, value)
+                msg := sprintf("Label <%v: %v> does not match regex %v", [label.key, value, label.allowedRegex])
+              }
