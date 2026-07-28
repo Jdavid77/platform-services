@@ -1,0 +1,22 @@
+name: Conftest Policy Checks
+
+on:
+  pull_request:
+    paths:
+      - "environments/**"
+      - "policy/**"
+
+jobs:
+  conftest:
+    name: Validate manifests against OPA policies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install conftest
+        run: |
+          curl -sSL https://github.com/open-policy-agent/conftest/releases/download/v0.67.0/conftest_0.67.0_Linux_x86_64.tar.gz | tar xz
+          sudo mv conftest /usr/local/bin/
+
+      - name: Run conftest
+        run: conftest test environments/ -p policy/ --recursive
