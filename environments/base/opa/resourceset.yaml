@@ -52,6 +52,3 @@ spec:
           remediation:
             retries: 3
             remediateLastFailure: true
-        values:
-          psp:
-            enabled: false
