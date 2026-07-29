@@ -1,0 +1,4 @@
+[tools]
+"aqua:kubectl" = "1.36.1"
+"aqua:fluxcd/flux2" = "2.9.3"
+"github:home-operations/flate" = "latest"
