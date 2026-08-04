@@ -6,12 +6,12 @@ resources:
   - ../base/cert-manager
   - ../base/opa
   - ../base/team-namespaces
-  - istio.yaml
-  - cert-manager.yaml
-  - opa.yaml
+  - ./istio
+  - ./cert-manager
+  - ./opa
 
 patches:
-  - path: team-namespaces.yaml
+  - path: team-namespaces/patch.yaml
     target:
       kind: ResourceSet
       name: team-namespaces
