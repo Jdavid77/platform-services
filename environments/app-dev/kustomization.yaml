@@ -3,8 +3,12 @@ kind: Kustomization
 
 resources:
   - ../base/istio
+  - ../base/cert-manager
+  - ../base/opa
   - ../base/team-namespaces
   - ./istio
+  - ./cert-manager
+  - ./opa
 
 patches:
   - path: team-namespaces/patch.yaml
