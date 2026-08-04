@@ -19,9 +19,9 @@ spec:
       metadata:
         name: << inputs.team >>
         labels:
-          team: << inputs.team >>
-          environment: << inputs.environment >>
-          cost-center: << inputs.costCenter >>
+          team: << inputs.team | quote >>
+          environment: << inputs.environment | quote >>
+          cost-center: << inputs.costCenter | quote >>
           istio-injection: enabled
     # ----------------------- Resource governance ------------------------
     - apiVersion: v1
