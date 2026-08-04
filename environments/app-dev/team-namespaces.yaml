@@ -1,0 +1,15 @@
+apiVersion: fluxcd.controlplane.io/v1
+kind: ResourceSet
+metadata:
+  name: team-namespaces
+  namespace: flux-system
+spec:
+  inputs:
+    - team: application
+      environment: prod
+      costCenter: "1000"
+      cpu: "2"
+      memory: "4Gi"
+      cpuLimit: "4"
+      memoryLimit: "8Gi"
+      maxPods: "20"
