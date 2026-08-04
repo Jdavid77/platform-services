@@ -47,7 +47,7 @@ Each environment is a standard Kustomize overlay on top of the relevant `base/` 
 ## Environments
 
 - **`platform-sandbox`** — the continuous environment; reconciled on every push to `main`.
-- **`app-dev`** — intended to be the production-equivalent environment, reconciled on merge to a `production` branch rather than on every push to `main`. This promotion gating is not fully wired up yet, which is why `app-dev` today only carries a subset of components,  expect it to grow as promotion is implemented.
+- **`app-dev`** — the production-equivalent environment, carrying the same components as `platform-sandbox`. Intended to reconcile on merge to a `production` branch rather than on every push to `main`; that promotion gating is not fully wired up yet.
 
 ## Validating changes locally
 
