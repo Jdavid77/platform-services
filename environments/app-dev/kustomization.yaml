@@ -3,7 +3,14 @@ kind: Kustomization
 
 resources:
   - ../base/istio
+  - ../base/team-namespaces
   - istio.yaml
+
+patches:
+  - path: team-namespaces.yaml
+    target:
+      kind: ResourceSet
+      name: team-namespaces
 
 labels:
   - pairs:

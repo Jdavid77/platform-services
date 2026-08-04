@@ -3,5 +3,3 @@ kind: Kustomization
 
 resources:
   - ./resourceset.yaml
-  - ./gateway.yaml
-  - ./peer-authentication.yaml
