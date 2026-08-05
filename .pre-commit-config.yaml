@@ -1,0 +1,14 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: sops-check-encryption
+        name: Check SOPS encryption
+        entry: ./scripts/check-sops-encryption.sh
+        language: script
+        files: '(secret|credential|token|key).*\.yaml$'
+        stages: [pre-commit]
