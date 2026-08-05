@@ -4,3 +4,5 @@
 "aqua:fluxcd/flux2" = "2.9.3"
 "aqua:open-policy-agent/conftest" = "latest"
 "github:home-operations/flate" = "latest"
+"aqua:getsops/sops" = "latest"
+"aqua:FiloSottile/age" = "latest"
