@@ -5,6 +5,7 @@ resources:
   - ./istio
   - ./cert-manager
   - ./opa
+  - ./monitoring
   - ./team-namespaces
 
 labels:
