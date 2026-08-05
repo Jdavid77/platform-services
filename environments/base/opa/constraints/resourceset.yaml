@@ -45,6 +45,7 @@ spec:
             - local-path-storage
             - metallb-system
             - opa-gatekeeper
+            - monitoring
         parameters:
           labels:
             - key: "team"
@@ -76,6 +77,7 @@ spec:
             - local-path-storage
             - metallb-system
             - opa-gatekeeper
+            - monitoring
         parameters:
           cpu: "2"
           memory: "4Gi"
