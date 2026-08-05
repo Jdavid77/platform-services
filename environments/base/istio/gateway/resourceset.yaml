@@ -10,6 +10,11 @@ metadata:
     fluxcd.controlplane.io/force: "true"
 spec:
   wait: true
+  inputsFrom:
+    - kind: ResourceSetInputProvider
+      selector:
+        matchLabels:
+          app: istio
   dependsOn:
     - apiVersion: fluxcd.controlplane.io/v1
       kind: ResourceSet
@@ -31,10 +36,10 @@ spec:
         secretName: wildcard-tls
         duration: 2160h # 90 days
         renewBefore: 360h # 15 days
-        commonName: "platform-sandbox.com"
+        commonName: "<< inputs.domain >>"
         dnsNames:
-          - "platform-sandbox.com"
-          - "*.platform-sandbox.com"
+          - "<< inputs.domain >>"
+          - "*.<< inputs.domain >>"
         issuerRef:
           name: ca-issuer
           kind: ClusterIssuer
@@ -55,4 +60,4 @@ spec:
             mode: SIMPLE
             credentialName: wildcard-tls
           hosts:
-          - "*.platform-sandbox.com"
+          - "*.<< inputs.domain >>"
