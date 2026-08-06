@@ -33,7 +33,7 @@ spec:
       kind: HelmRelease
       metadata:
         name: cert-manager
-        namespace: flux-system
+        namespace: cert-manager
       spec:
         interval: 15m
         timeout: 5m
@@ -42,7 +42,6 @@ spec:
           kind: OCIRepository
           name: cert-manager
           namespace: flux-system
-        targetNamespace: cert-manager
         install:
           createNamespace: true
           timeout: 10m0s

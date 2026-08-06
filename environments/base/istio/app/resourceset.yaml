@@ -29,7 +29,7 @@ spec:
       kind: HelmRelease
       metadata:
         name: istio-base
-        namespace: flux-system
+        namespace: istio-system
       spec:
         interval: 5m
         chart:
@@ -40,7 +40,6 @@ spec:
               kind: HelmRepository
               name: istio
               namespace: flux-system
-        targetNamespace: istio-system
         install:
           createNamespace: true
           timeout: 10m0s
@@ -55,7 +54,7 @@ spec:
       kind: HelmRelease
       metadata:
         name: istiod
-        namespace: flux-system
+        namespace: istio-system
       spec:
         interval: 5m
         dependsOn:
@@ -68,7 +67,6 @@ spec:
               kind: HelmRepository
               name: istio
               namespace: flux-system
-        targetNamespace: istio-system
         install:
           timeout: 10m0s
           remediation:
@@ -98,7 +96,7 @@ spec:
       kind: HelmRelease
       metadata:
         name: istio-ingress
-        namespace: flux-system
+        namespace: istio-system
       spec:
         interval: 5m
         dependsOn:
@@ -111,7 +109,6 @@ spec:
               kind: HelmRepository
               name: istio
               namespace: flux-system
-        targetNamespace: istio-system
         install:
           timeout: 10m0s
           remediation:

@@ -33,7 +33,7 @@ spec:
       kind: HelmRelease
       metadata:
         name: kube-prometheus-stack
-        namespace: flux-system
+        namespace: monitoring
       spec:
         interval: 15m
         timeout: 5m
@@ -42,7 +42,6 @@ spec:
           kind: OCIRepository
           name: kube-prometheus-stack
           namespace: flux-system
-        targetNamespace: monitoring
         install:
           timeout: 10m0s
           remediation:

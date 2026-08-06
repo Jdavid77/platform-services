@@ -29,7 +29,7 @@ spec:
       kind: HelmRelease
       metadata:
         name: gatekeeper
-        namespace: flux-system
+        namespace: opa-gatekeeper
       spec:
         interval: 5m
         chart:
@@ -41,7 +41,6 @@ spec:
               name: gatekeeper
               namespace: flux-system
             interval: 10m
-        targetNamespace: opa-gatekeeper
         install:
           createNamespace: true
           timeout: 10m0s
