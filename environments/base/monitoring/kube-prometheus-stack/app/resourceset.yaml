@@ -89,6 +89,7 @@ spec:
           # Grafana configuration
           grafana:
             enabled: true
+            defaultDashboardsEnabled: false
 
             # Ingress configuration
             ingress:
