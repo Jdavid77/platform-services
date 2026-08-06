@@ -97,6 +97,19 @@ spec:
               # No need for it
               jaeger: null
               zipkin: null
+              # Parse JSON app logs so 'level' becomes severity_text (drives log-level UI in VictoriaLogs/Grafana)
+              filelog:
+                operators:
+                  - type: container
+                    id: container-parser
+                    max_log_size: 102400
+                  - type: json_parser
+                    id: json-parser
+                    on_error: send
+                  - type: severity_parser
+                    id: severity-parser
+                    parse_from: body.level
+                    on_error: send
             exporters:
               otlp/tempo:
                 endpoint: tempo.monitoring.svc.cluster.local:4317
