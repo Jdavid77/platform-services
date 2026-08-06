@@ -52,6 +52,11 @@ spec:
           remediation:
             retries: 3
             remediateLastFailure: true
+        valuesFrom:
+          - kind: Secret
+            name: discord-webhook
+            valuesKey: webhookURL
+            targetPath: alertmanager.config.receivers[0].discord_configs[0].webhook_url
         values:
           crds:
             enabled: true
@@ -118,9 +123,6 @@ spec:
                       requests:
                         storage: 1Gi
 
-              secrets:
-                - discord-webhook
-
             # Alertmanager configuration
             config:
               route:
@@ -134,7 +136,7 @@ spec:
               receivers:
                 - name: discord
                   discord_configs:
-                    - webhook_url_file: /etc/alertmanager/secrets/discord-webhook/webhookURL
+                    - send_resolved: true
 
           # Node exporter configuration
           nodeExporter:
