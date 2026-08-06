@@ -58,8 +58,10 @@ spec:
           image:
             repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib
           presets:
+            # Add file-log receiver
             logsCollection:
               enabled: true
+            # Add k8s attributes processor
             kubernetesAttributes:
               enabled: true
           resources:
@@ -69,6 +71,7 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          # Schefule also on control plane nodes
           tolerations:
             - key: node-role.kubernetes.io/control-plane
               operator: Exists
@@ -91,6 +94,7 @@ spec:
               enabled: false
           config:
             receivers:
+              # No need for it
               jaeger: null
               zipkin: null
             exporters:
@@ -101,7 +105,7 @@ spec:
               otlphttp/victorialogs:
                 logs_endpoint: http://victoria-logs-victoria-logs-single-server.monitoring.svc.cluster.local:9428/insert/opentelemetry/v1/logs
               prometheus:
-                endpoint: ${env:MY_POD_IP}:8889
+                endpoint: 0.0.0.0:8889
             service:
               pipelines:
                 traces:
