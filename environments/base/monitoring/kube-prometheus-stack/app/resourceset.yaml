@@ -56,20 +56,72 @@ spec:
           crds:
             enabled: true
           cleanPrometheusOperatorObjectNames: true
+          # Prometheus configuration
+          prometheus:
+            prometheusSpec:
+              # Storage configuration
+              retention: 1d
+              retentionSize: "8Gi"
+
+              # Resource requests and limits
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 2Gi
+                limits:
+                  cpu: 2000m
+                  memory: 4Gi
+
+              # Persistent storage
+              storageSpec:
+                volumeClaimTemplate:
+                  spec:
+                    storageClassName: standard
+                    accessModes: ["ReadWriteOnce"]
+                    resources:
+                      requests:
+                        storage: 10Gi
+
+          # Grafana configuration
+          grafana:
+            enabled: true
+
+            # Ingress configuration
+            ingress:
+              enabled: false
+
+            # Persistence for dashboards
+            persistence:
+              enabled: false
+
+          # Alertmanager configuration
           alertmanager:
-            route:
-              main:
-                enabled: false
+            enabled: true
+
             alertmanagerSpec:
-              replicas: 1
+              # Resource configuration
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+
+              # Storage for silences and notification state
               storage:
                 volumeClaimTemplate:
                   spec:
+                    storageClassName: standard
+                    accessModes: ["ReadWriteOnce"]
                     resources:
                       requests:
                         storage: 1Gi
+
               secrets:
                 - discord-webhook
+
+            # Alertmanager configuration
             config:
               route:
                 receiver: discord
@@ -77,108 +129,16 @@ spec:
                 group_wait: 30s
                 group_interval: 5m
                 repeat_interval: 4h
+
               receivers:
                 - name: discord
                   discord_configs:
                     - webhook_url_file: /etc/alertmanager/secrets/discord-webhook/webhookURL
-          kubelet:
-            enabled: true
-            serviceMonitor:
-              metricRelabelings:
-                - action: labeldrop
-                  regex: (uid)
-                - action: labeldrop
-                  regex: (id|name)
-                - action: drop
-                  sourceLabels: ["__name__"]
-                  regex: (rest_client_request_duration_seconds_bucket|rest_client_request_duration_seconds_sum|rest_client_request_duration_seconds_count)
-          kubeApiServer:
-            enabled: true
-            serviceMonitor:
-              metricRelabelings:
-                - action: drop
-                  sourceLabels: ["__name__"]
-                  regex: (apiserver|etcd|rest_client)_request(|_sli|_slo)_duration_seconds_bucket
-                - action: drop
-                  sourceLabels: ["__name__"]
-                  regex: (apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket)
-          kubeControllerManager:
-            enabled: false
-          kubeEtcd:
-            enabled: false
-          kubeScheduler:
-            enabled: false
-          kubeProxy:
-            enabled: false
-          prometheusOperator:
-            prometheusConfigReloader:
-              resources:
-                requests:
-                  cpu: 100m
-                  memory: 50Mi
-                limits:
-                  cpu: 300m
-                  memory: 100Mi
-          prometheus:
-            route:
-              main:
-                enabled: false
-            thanosService:
-              enabled: false
-            thanosServiceMonitor:
-              enabled: false
-            prometheusSpec:
-              replicas: 1
-              replicaExternalLabelName: __replica__
-              scrapeInterval: 1m # Must match interval in Grafana Helm chart
-              ruleSelectorNilUsesHelmValues: false
-              serviceMonitorSelectorNilUsesHelmValues: false
-              podMonitorSelectorNilUsesHelmValues: false
-              probeSelectorNilUsesHelmValues: false
-              scrapeConfigSelectorNilUsesHelmValues: false
-              enableRemoteWriteReceiver: true
-              enableAdminAPI: true
-              walCompression: true
-              enableFeatures:
-                - auto-gomemlimit
-                - memory-snapshot-on-shutdown
-                - new-service-discovery-manager
-              retention: 1d
-              retentionSize: 9GB
-              externalLabels:
-                cluster: main
-              resources:
-                requests:
-                  cpu: 500m
-                limits:
-                  memory: 4Gi
-              storageSpec:
-                volumeClaimTemplate:
-                  spec:
-                    resources:
-                      requests:
-                        storage: 10Gi
+
+          # Node exporter configuration
           nodeExporter:
             enabled: true
-          prometheus-node-exporter:
-            resources:
-              requests:
-                cpu: 23m
-                memory: 64M
-              limits:
-                memory: 64M
-            fullnameOverride: node-exporter
-            prometheus:
-              monitor:
-                enabled: true
-                relabelings:
-                  - action: replace
-                    regex: (.*)
-                    replacement: $1
-                    sourceLabels: ["__meta_kubernetes_pod_node_name"]
-                    targetLabel: node
+
+          # Kube-state-metrics configuration
           kubeStateMetrics:
-            enabled: false
-          grafana:
             enabled: true
-            defaultDashboardsEnabled: false
