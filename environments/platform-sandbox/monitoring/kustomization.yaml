@@ -7,3 +7,4 @@ resources:
   - ./tempo
   - ./metrics-server
   - ./victoria-logs
+  - ./otel-collector
