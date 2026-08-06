@@ -6,3 +6,4 @@ resources:
   - ./kube-prometheus-stack
   - ./tempo
   - ./metrics-server
+  - ./victoria-logs
