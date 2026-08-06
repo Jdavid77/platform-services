@@ -61,7 +61,7 @@ spec:
             prometheusSpec:
               # Storage configuration
               retention: 1d
-              retentionSize: "8Gi"
+              retentionSize: "8GB"
 
               # Resource requests and limits
               resources:
