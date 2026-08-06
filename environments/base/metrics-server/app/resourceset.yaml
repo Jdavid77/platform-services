@@ -29,7 +29,7 @@ spec:
       kind: HelmRelease
       metadata:
         name: metrics-server
-        namespace: kube-system
+        namespace: monitoring
       spec:
         interval: 15m
         timeout: 5m
@@ -53,11 +53,6 @@ spec:
             remediateLastFailure: true
         values:
           args:
-            - --cert-dir=/tmp
-            - --secure-port=443
-            - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
-            - --kubelet-use-node-status-port
-            - --metric-resolution=15s
             - --kubelet-insecure-tls
           metrics:
             enabled: true
