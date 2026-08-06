@@ -6,7 +6,6 @@ resources:
   - ./cert-manager
   - ./opa
   - ./monitoring
-  - ./metrics-server
   - ./team-namespaces
 
 labels:
