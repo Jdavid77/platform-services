@@ -61,3 +61,19 @@ spec:
             credentialName: wildcard-tls
           hosts:
           - "*.<< inputs.domain >>"
+    - apiVersion: networking.istio.io/v1
+      kind: VirtualService
+      metadata:
+        name: grafana
+        namespace: monitoring
+      spec:
+        hosts:
+          - "grafana.<< inputs.domain >>"
+        gateways:
+          - istio-system/gateway
+        http:
+          - route:
+              - destination:
+                  host: kube-prometheus-stack-grafana.monitoring.svc.cluster.local
+                  port:
+                    number: 80

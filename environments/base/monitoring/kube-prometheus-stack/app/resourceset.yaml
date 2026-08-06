@@ -99,6 +99,19 @@ spec:
             persistence:
               enabled: false
 
+            plugins:
+              - victoriametrics-logs-datasource
+
+            additionalDataSources:
+              - name: Tempo
+                type: tempo
+                access: proxy
+                url: http://tempo.monitoring.svc.cluster.local:3200
+              - name: VictoriaLogs
+                type: victoriametrics-logs-datasource
+                access: proxy
+                url: http://victoria-logs-victoria-logs-single-server.monitoring.svc.cluster.local:9428
+
           # Alertmanager configuration
           alertmanager:
             enabled: true
