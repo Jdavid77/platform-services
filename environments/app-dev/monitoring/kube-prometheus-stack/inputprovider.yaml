@@ -1,13 +1,12 @@
 apiVersion: fluxcd.controlplane.io/v1
 kind: ResourceSetInputProvider
 metadata:
-  name: istio-app-dev
+  name: kube-prometheus-stack-app-dev
   namespace: flux-system
   labels:
-    app: istio
+    app: kube-prometheus-stack
 spec:
   type: Static
   defaultValues:
-    version: "1.30.3"
+    version: "88.1.5"
     domain: "app-dev.local"
-    gatewayApiVersion: "v1.6.1"

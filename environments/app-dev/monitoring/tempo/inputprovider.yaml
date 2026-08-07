@@ -1,13 +1,11 @@
 apiVersion: fluxcd.controlplane.io/v1
 kind: ResourceSetInputProvider
 metadata:
-  name: istio-app-dev
+  name: tempo-app-dev
   namespace: flux-system
   labels:
-    app: istio
+    app: tempo
 spec:
   type: Static
   defaultValues:
-    version: "1.30.3"
-    domain: "app-dev.local"
-    gatewayApiVersion: "v1.6.1"
+    version: "1.24.4"
