@@ -41,10 +41,10 @@ spec:
         secretName: wildcard-tls
         duration: 2160h # 90 days
         renewBefore: 360h # 15 days
-        commonName: "<< inputs.domain >>"
+        commonName: "demo-company.site"
         dnsNames:
-          - "<< inputs.domain >>"
-          - "*.<< inputs.domain >>"
+          - "demo-company.site"
+          - "*.demo-company.site"
         issuerRef:
           name: letsencrypt-production
           kind: ClusterIssuer
