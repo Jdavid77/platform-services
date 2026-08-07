@@ -42,5 +42,5 @@ spec:
           kind: GitRepository
           name: gateway-api-crds
           namespace: flux-system
-        path: ./config/crd
+        path: ./config/crd/experimental
         prune: false

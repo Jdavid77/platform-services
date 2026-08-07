@@ -130,6 +130,7 @@ spec:
         interval: 5m
         dependsOn:
           - name: istio-cni
+          - name: istiod
         chart:
           spec:
             version: << inputs.version >>
