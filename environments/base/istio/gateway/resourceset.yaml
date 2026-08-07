@@ -23,6 +23,11 @@ spec:
       ready: true
     - apiVersion: fluxcd.controlplane.io/v1
       kind: ResourceSet
+      name: istio-gateway-api-crds
+      namespace: flux-system
+      ready: true
+    - apiVersion: fluxcd.controlplane.io/v1
+      kind: ResourceSet
       name: cert-manager-ca-issuer
       namespace: flux-system
       ready: true
@@ -43,37 +48,38 @@ spec:
         issuerRef:
           name: ca-issuer
           kind: ClusterIssuer
-    - apiVersion: networking.istio.io/v1
+    - apiVersion: gateway.networking.k8s.io/v1
       kind: Gateway
       metadata:
         name: gateway
         namespace: istio-system
       spec:
-        selector:
-          istio: ingressgateway
-        servers:
-        - port:
-            number: 443
-            name: https
+        gatewayClassName: istio
+        listeners:
+          - name: https
+            port: 443
             protocol: HTTPS
-          tls:
-            mode: SIMPLE
-            credentialName: wildcard-tls
-          hosts:
-          - "*.<< inputs.domain >>"
-    - apiVersion: networking.istio.io/v1
-      kind: VirtualService
+            hostname: "*.<< inputs.domain >>"
+            tls:
+              mode: Terminate
+              certificateRefs:
+                - name: wildcard-tls
+            allowedRoutes:
+              namespaces:
+                from: All
+    - apiVersion: gateway.networking.k8s.io/v1
+      kind: HTTPRoute
       metadata:
         name: grafana
         namespace: monitoring
       spec:
-        hosts:
+        parentRefs:
+          - name: gateway
+            namespace: istio-system
+            sectionName: https
+        hostnames:
           - "grafana.<< inputs.domain >>"
-        gateways:
-          - istio-system/gateway
-        http:
-          - route:
-              - destination:
-                  host: kube-prometheus-stack-grafana.monitoring.svc.cluster.local
-                  port:
-                    number: 80
+        rules:
+          - backendRefs:
+              - name: kube-prometheus-stack-grafana
+                port: 80

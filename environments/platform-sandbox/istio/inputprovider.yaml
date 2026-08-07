@@ -10,3 +10,4 @@ spec:
   defaultValues:
     version: "1.30.3"
     domain: "platform-sandbox.com"
+    gatewayApiVersion: "v1.6.1"
