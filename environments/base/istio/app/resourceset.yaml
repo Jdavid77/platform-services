@@ -105,7 +105,7 @@ spec:
         chart:
           spec:
             version: << inputs.version >>
-            chart: istio-cni
+            chart: cni
             sourceRef:
               kind: HelmRepository
               name: istio
