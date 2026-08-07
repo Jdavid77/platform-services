@@ -57,6 +57,12 @@ spec:
         deployment: |
           spec:
             replicas: 2
+            template:
+              spec:
+                tolerations:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
+                    effect: NoSchedule
         service: |
           spec:
             type: ClusterIP
