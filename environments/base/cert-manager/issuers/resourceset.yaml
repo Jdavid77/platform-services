@@ -10,6 +10,12 @@ metadata:
     fluxcd.controlplane.io/force: "true"
 spec:
   wait: true
+  dependsOn:
+    - apiVersion: fluxcd.controlplane.io/v1
+      kind: ResourceSet
+      name: cert-manager
+      namespace: flux-system
+      ready: true
   resources:
     - apiVersion: cert-manager.io/v1
       kind: ClusterIssuer

@@ -9,5 +9,5 @@ spec:
   type: Static
   defaultValues:
     version: "1.30.3"
-    domain: "platform-sandbox.com"
+    domain: "platform-sandbox.demo-company.site"
     gatewayApiVersion: "v1.6.1"
