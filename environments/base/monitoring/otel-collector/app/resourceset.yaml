@@ -1,0 +1,157 @@
+apiVersion: fluxcd.controlplane.io/v1
+kind: ResourceSet
+metadata:
+  name: otel-collector
+  namespace: flux-system
+  annotations:
+    fluxcd.controlplane.io/reconcile: "enabled"
+    fluxcd.controlplane.io/reconcileEvery: "30m"
+    fluxcd.controlplane.io/reconcileTimeout: "5m"
+    fluxcd.controlplane.io/force: "true"
+spec:
+  wait: true
+  inputsFrom:
+    - kind: ResourceSetInputProvider
+      selector:
+        matchLabels:
+          app: otel-collector
+  resources:
+    - apiVersion: source.toolkit.fluxcd.io/v1
+      kind: HelmRepository
+      metadata:
+        name: open-telemetry
+        namespace: flux-system
+      spec:
+        interval: 30m
+        url: https://open-telemetry.github.io/opentelemetry-helm-charts
+        timeout: 1m
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      metadata:
+        name: otel-collector
+        namespace: monitoring
+      spec:
+        interval: 15m
+        timeout: 5m
+        maxHistory: 2
+        chart:
+          spec:
+            chart: opentelemetry-collector
+            version: << inputs.version >>
+            sourceRef:
+              kind: HelmRepository
+              name: open-telemetry
+              namespace: flux-system
+        install:
+          timeout: 10m0s
+          remediation:
+            retries: 3
+        upgrade:
+          timeout: 10m0s
+          remediation:
+            retries: 3
+            remediateLastFailure: true
+        values:
+          mode: daemonset
+          service:
+            enabled: true
+          image:
+            repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib
+          presets:
+            # Add file-log receiver
+            logsCollection:
+              enabled: true
+            # Add k8s attributes processor
+            kubernetesAttributes:
+              enabled: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          # Schefule also on control plane nodes
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+          ports:
+            metrics:
+              enabled: true
+            prom-exporter:
+              enabled: true
+              containerPort: 8889
+              servicePort: 8889
+              protocol: TCP
+            jaeger-compact:
+              enabled: false
+            jaeger-thrift:
+              enabled: false
+            jaeger-grpc:
+              enabled: false
+            zipkin:
+              enabled: false
+          config:
+            processors:
+              # Trim k8s_attributes down to just the *.name fields (+ service.namespace) we care about
+              k8s_attributes:
+                extract:
+                  metadata:
+                    - k8s.namespace.name
+                    - k8s.pod.name
+                    - k8s.node.name
+                    - k8s.container.name
+                    - k8s.deployment.name
+                    - k8s.daemonset.name
+                    - k8s.statefulset.name
+                    - k8s.job.name
+                    - k8s.cronjob.name
+                    - service.namespace
+                    - service.name
+            receivers:
+              # No need for it
+              jaeger: null
+              zipkin: null
+              # Parse JSON app logs so 'level' becomes severity_text (drives log-level UI in VictoriaLogs/Grafana)
+              filelog:
+                operators:
+                  - type: container
+                    id: container-parser
+                    max_log_size: 102400
+                  - type: json_parser
+                    id: json-parser
+                    on_error: send
+                  - type: severity_parser
+                    id: severity-parser
+                    parse_from: body.level
+                    on_error: send
+            exporters:
+              otlp/tempo:
+                endpoint: tempo.monitoring.svc.cluster.local:4317
+                tls:
+                  insecure: true
+              otlphttp/victorialogs:
+                logs_endpoint: http://victoria-logs-victoria-logs-single-server.monitoring.svc.cluster.local:9428/insert/opentelemetry/v1/logs
+              prometheus:
+                endpoint: 0.0.0.0:8889
+            service:
+              pipelines:
+                traces:
+                  receivers: [otlp]
+                  processors: [memory_limiter, batch]
+                  exporters: [otlp/tempo]
+                metrics:
+                  receivers: [otlp]
+                  processors: [memory_limiter, batch]
+                  exporters: [prometheus]
+                logs:
+                  receivers: [otlp]
+                  processors: [memory_limiter, batch]
+                  exporters: [otlphttp/victorialogs]
+          serviceMonitor:
+            enabled: false
+            extraLabels:
+              release: kube-prometheus-stack
+            metricsEndpoints:
+              - port: prom-exporter

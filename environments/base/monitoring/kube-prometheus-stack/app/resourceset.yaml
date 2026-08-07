@@ -1,0 +1,160 @@
+apiVersion: fluxcd.controlplane.io/v1
+kind: ResourceSet
+metadata:
+  name: kube-prometheus-stack
+  namespace: flux-system
+  annotations:
+    fluxcd.controlplane.io/reconcile: "enabled"
+    fluxcd.controlplane.io/reconcileEvery: "30m"
+    fluxcd.controlplane.io/reconcileTimeout: "5m"
+    fluxcd.controlplane.io/force: "true"
+spec:
+  wait: true
+  inputsFrom:
+    - kind: ResourceSetInputProvider
+      selector:
+        matchLabels:
+          app: kube-prometheus-stack
+  resources:
+    - apiVersion: source.toolkit.fluxcd.io/v1
+      kind: OCIRepository
+      metadata:
+        name: kube-prometheus-stack
+        namespace: flux-system
+      spec:
+        interval: 5m
+        layerSelector:
+          mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
+          operation: copy
+        ref:
+          tag: << inputs.version >>
+        url: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      metadata:
+        name: kube-prometheus-stack
+        namespace: monitoring
+      spec:
+        interval: 15m
+        timeout: 5m
+        maxHistory: 2
+        chartRef:
+          kind: OCIRepository
+          name: kube-prometheus-stack
+          namespace: flux-system
+        install:
+          timeout: 10m0s
+          remediation:
+            retries: 3
+        upgrade:
+          timeout: 10m0s
+          remediation:
+            retries: 3
+            remediateLastFailure: true
+        valuesFrom:
+          - kind: Secret
+            name: discord-webhook
+            valuesKey: webhookURL
+            targetPath: alertmanager.config.receivers[0].discord_configs[0].webhook_url
+        values:
+          crds:
+            enabled: true
+          cleanPrometheusOperatorObjectNames: true
+          # Prometheus configuration
+          prometheus:
+            prometheusSpec:
+              # Storage configuration
+              retention: 1d
+              retentionSize: "8GB"
+
+              # Resource requests and limits
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 2Gi
+                limits:
+                  cpu: 2000m
+                  memory: 4Gi
+
+              # Persistent storage
+              storageSpec:
+                volumeClaimTemplate:
+                  spec:
+                    storageClassName: standard
+                    accessModes: ["ReadWriteOnce"]
+                    resources:
+                      requests:
+                        storage: 10Gi
+
+          # Grafana configuration
+          grafana:
+            enabled: true
+            defaultDashboardsEnabled: false
+
+            # Ingress configuration
+            ingress:
+              enabled: false
+
+            # Persistence for dashboards
+            persistence:
+              enabled: false
+
+            plugins:
+              - victoriametrics-logs-datasource
+
+            additionalDataSources:
+              - name: Tempo
+                type: tempo
+                access: proxy
+                url: http://tempo.monitoring.svc.cluster.local:3200
+              - name: VictoriaLogs
+                type: victoriametrics-logs-datasource
+                access: proxy
+                url: http://victoria-logs-victoria-logs-single-server.monitoring.svc.cluster.local:9428
+
+          # Alertmanager configuration
+          alertmanager:
+            enabled: true
+
+            alertmanagerSpec:
+              # Resource configuration
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+
+              # Storage for silences and notification state
+              storage:
+                volumeClaimTemplate:
+                  spec:
+                    storageClassName: standard
+                    accessModes: ["ReadWriteOnce"]
+                    resources:
+                      requests:
+                        storage: 1Gi
+
+            # Alertmanager configuration
+            config:
+              route:
+                receiver: discord
+                group_by: ["alertname"]
+                group_wait: 30s
+                group_interval: 5m
+                repeat_interval: 4h
+                routes: []
+
+              receivers:
+                - name: discord
+                  discord_configs:
+                    - send_resolved: true
+
+          # Node exporter configuration
+          nodeExporter:
+            enabled: true
+
+          # Kube-state-metrics configuration
+          kubeStateMetrics:
+            enabled: true

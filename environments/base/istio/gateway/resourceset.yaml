@@ -10,10 +10,20 @@ metadata:
     fluxcd.controlplane.io/force: "true"
 spec:
   wait: true
+  inputsFrom:
+    - kind: ResourceSetInputProvider
+      selector:
+        matchLabels:
+          app: istio
   dependsOn:
     - apiVersion: fluxcd.controlplane.io/v1
       kind: ResourceSet
       name: istio
+      namespace: flux-system
+      ready: true
+    - apiVersion: fluxcd.controlplane.io/v1
+      kind: ResourceSet
+      name: istio-gateway-api-crds
       namespace: flux-system
       ready: true
     - apiVersion: fluxcd.controlplane.io/v1
@@ -31,28 +41,52 @@ spec:
         secretName: wildcard-tls
         duration: 2160h # 90 days
         renewBefore: 360h # 15 days
-        commonName: "platform-sandbox.com"
+        commonName: "<< inputs.domain >>"
         dnsNames:
-          - "platform-sandbox.com"
-          - "*.platform-sandbox.com"
+          - "<< inputs.domain >>"
+          - "*.<< inputs.domain >>"
         issuerRef:
           name: ca-issuer
           kind: ClusterIssuer
-    - apiVersion: networking.istio.io/v1
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: gw-options
+        namespace: istio-system
+      data:
+        deployment: |
+          spec:
+            replicas: 2
+            template:
+              spec:
+                tolerations:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
+                    effect: NoSchedule
+        service: |
+          spec:
+            type: ClusterIP
+    - apiVersion: gateway.networking.k8s.io/v1
       kind: Gateway
       metadata:
         name: gateway
         namespace: istio-system
       spec:
-        selector:
-          istio: ingressgateway
-        servers:
-        - port:
-            number: 443
-            name: https
+        gatewayClassName: istio
+        infrastructure:
+          parametersRef:
+            group: ""
+            kind: ConfigMap
+            name: gw-options
+        listeners:
+          - name: https
+            port: 443
             protocol: HTTPS
-          tls:
-            mode: SIMPLE
-            credentialName: wildcard-tls
-          hosts:
-          - "*.platform-sandbox.com"
+            hostname: "*.<< inputs.domain >>"
+            tls:
+              mode: Terminate
+              certificateRefs:
+                - name: wildcard-tls
+            allowedRoutes:
+              namespaces:
+                from: All

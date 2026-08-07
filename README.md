@@ -9,6 +9,7 @@ This repo is the GitOps source that Flux reconciles onto the cluster: platform-w
 - [flux2 cli](https://fluxcd.io/flux/installation/)
 - [conftest](https://www.conftest.dev/)
 - [flate](https://github.com/home-operations/flate)
+- [sops](https://github.com/getsops/sops) + [age](https://github.com/FiloSottile/age)
 - [mise](https://mise.jdx.dev/)
 
 ## Layout
@@ -47,7 +48,7 @@ Each environment is a standard Kustomize overlay on top of the relevant `base/` 
 ## Environments
 
 - **`platform-sandbox`** — the continuous environment; reconciled on every push to `main`.
-- **`app-dev`** — the production-equivalent environment, carrying the same components as `platform-sandbox`. Intended to reconcile on merge to a `production` branch rather than on every push to `main`; that promotion gating is not fully wired up yet.
+- **`app-dev`** — the production-equivalent environment, carrying the same components as `platform-sandbox`. Intended to reconcile on merge to a `production` branch rather than on every push to `main`
 
 ## Validating changes locally
 
@@ -60,6 +61,12 @@ flate test all --path ./environments
 ```
 
 Both run in CI on every PR (`.github/workflows/validate.yml`).
+
+## Secrets
+
+Secret values are encrypted with [SOPS](https://github.com/getsops/sops) using age (`.sops.yaml`). A component's secret manifest goes in `environments/<env>/<component>/secret.yaml`, alongside its `inputprovider.yaml`/`patch.yaml`; `.sops.yaml` matches any file named `secret.yaml` and encrypts only its `data`/`stringData` values, so the rest of the manifest stays readable in diffs.
+
+Flux's `Kustomization` for each environment (in `platform-gitops`) has `spec.decryption` pointed at a `flux-system/sops-age` Secret, created by `platform-core`'s Pulumi stack (`pulumi/modules/flux.py`) from an age private key stored in Bitwarden.
 
 ## Adding a new component
 

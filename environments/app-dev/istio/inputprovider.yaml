@@ -9,3 +9,5 @@ spec:
   type: Static
   defaultValues:
     version: "1.30.3"
+    domain: "app-dev.local"
+    gatewayApiVersion: "v1.6.1"

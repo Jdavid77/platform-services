@@ -29,7 +29,7 @@ spec:
       kind: HelmRelease
       metadata:
         name: istio-base
-        namespace: flux-system
+        namespace: istio-system
       spec:
         interval: 5m
         chart:
@@ -40,7 +40,6 @@ spec:
               kind: HelmRepository
               name: istio
               namespace: flux-system
-        targetNamespace: istio-system
         install:
           createNamespace: true
           timeout: 10m0s
@@ -55,7 +54,7 @@ spec:
       kind: HelmRelease
       metadata:
         name: istiod
-        namespace: flux-system
+        namespace: istio-system
       spec:
         interval: 5m
         dependsOn:
@@ -68,7 +67,6 @@ spec:
               kind: HelmRepository
               name: istio
               namespace: flux-system
-        targetNamespace: istio-system
         install:
           timeout: 10m0s
           remediation:
@@ -81,6 +79,7 @@ spec:
         values:
           global:
             istioNamespace: istio-system
+          profile: ambient
           pilot:
             autoscaleEnabled: true
             autoscaleMin: 1
@@ -97,21 +96,20 @@ spec:
     - apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
       metadata:
-        name: istio-ingress
-        namespace: flux-system
+        name: istio-cni
+        namespace: istio-system
       spec:
         interval: 5m
         dependsOn:
-          - name: istiod
+          - name: istio-base
         chart:
           spec:
             version: << inputs.version >>
-            chart: gateway
+            chart: cni
             sourceRef:
               kind: HelmRepository
               name: istio
               namespace: flux-system
-        targetNamespace: istio-system
         install:
           timeout: 10m0s
           remediation:
@@ -122,29 +120,31 @@ spec:
             retries: 3
             remediateLastFailure: true
         values:
-          name: istio-ingressgateway
-          replicaCount: 1
-          service:
-            type: NodePort
-            ports:
-              - port: 80
-                targetPort: 80
-                nodePort: 30080
-                name: http2
-              - port: 443
-                targetPort: 443
-                nodePort: 30443
-                name: https
-          tolerations:
-            - key: node-role.kubernetes.io/control-plane
-              operator: Exists
-              effect: NoSchedule
-          nodeSelector:
-            node-role.kubernetes.io/control-plane: ""
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
+          profile: ambient
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      metadata:
+        name: istio-ztunnel
+        namespace: istio-system
+      spec:
+        interval: 5m
+        dependsOn:
+          - name: istio-cni
+          - name: istiod
+        chart:
+          spec:
+            version: << inputs.version >>
+            chart: ztunnel
+            sourceRef:
+              kind: HelmRepository
+              name: istio
+              namespace: flux-system
+        install:
+          timeout: 10m0s
+          remediation:
+            retries: 3
+        upgrade:
+          timeout: 10m0s
+          remediation:
+            retries: 3
+            remediateLastFailure: true
