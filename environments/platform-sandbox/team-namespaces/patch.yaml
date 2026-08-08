@@ -12,9 +12,15 @@ spec:
   inputs:
     - team: application
       environment: staging
-      costCenter: "1000"
       cpu: "2"
       memory: "4Gi"
       cpuLimit: "4"
       memoryLimit: "8Gi"
       maxPods: "20"
+    - team: demo
+      environment: staging
+      cpu: "1"
+      memory: "2Gi"
+      cpuLimit: "2"
+      memoryLimit: "4Gi"
+      maxPods: "10"
